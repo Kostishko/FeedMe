@@ -9,6 +9,10 @@ namespace FeedMe
         private GraphicsDeviceManager _graphics;
         private SpriteBatch _spriteBatch;
 
+
+        //background
+        private Background background;
+
         public Game1()
         {
             _graphics = new GraphicsDeviceManager(this);
@@ -27,6 +31,9 @@ namespace FeedMe
         {
             _spriteBatch = new SpriteBatch(GraphicsDevice);
 
+            //back load
+            background = new Background(Content.Load<Texture2D>("back"), Vector2.Zero, GraphicsDevice.Viewport.Width, GraphicsDevice.Viewport.Height);
+
             // TODO: use this.Content to load your game content here
         }
 
@@ -43,6 +50,15 @@ namespace FeedMe
         protected override void Draw(GameTime gameTime)
         {
             GraphicsDevice.Clear(Color.CornflowerBlue);
+            _spriteBatch.Begin();
+
+
+
+            //Backgroound drawning
+            background.DrawMe(_spriteBatch);
+
+
+            _spriteBatch.End();
 
             // TODO: Add your drawing code here
 

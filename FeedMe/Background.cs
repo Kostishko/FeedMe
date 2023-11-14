@@ -7,17 +7,12 @@ namespace FeedMe
     internal class Background : Object2D
     {
 
-        public Background(Texture2D tex, Vector2 pos) : base(tex, pos) 
+        public Background(Texture2D tex, Vector2 pos, int width, int height) : base(tex, pos)
         {
-                       
+            mainRec.Width = width;
+            mainRec.Height = height;
         }
 
-            
-        public void Initialise()
-        {
-
-        }
-
-
+        
     }
 }
