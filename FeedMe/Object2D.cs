@@ -46,6 +46,11 @@ namespace FeedMe
             sp.Draw(Texture, mainRec,Color);
         }
 
+        public Vector2 GetPos()
+        {
+            return Position;
+        }
+
 
 
 
