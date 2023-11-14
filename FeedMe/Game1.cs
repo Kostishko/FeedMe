@@ -19,7 +19,7 @@ namespace FeedMe
 
         //Food list
         private List<Food> foods;
-        private Queue<Food> foodQueue;
+       // private Queue<Food> foodQueue;
         private Texture2D poffin;
 
 
@@ -50,10 +50,10 @@ namespace FeedMe
 
             //food load
             foods = new List<Food>();
-            foodQueue = new Queue<Food>();
+            //foodQueue = new Queue<Food>();
             poffin = Content.Load<Texture2D>("poffin");
-            foodQueue.Enqueue(new Food(poffin, new Vector2(GraphicsDevice.Viewport.Width / 2 - poffin.Width / 2, 0)));
-//            foods.Add(new Food(poffin, new Vector2(GraphicsDevice.Viewport.Width / 2 - poffin.Width/2, 0)));
+            //foodQueue.Enqueue(new Food(poffin, new Vector2(GraphicsDevice.Viewport.Width / 2 - poffin.Width / 2, 0)));
+            foods.Add(new Food(poffin, new Vector2(GraphicsDevice.Viewport.Width / 2 - poffin.Width/2, 0)));
 
             //back load
             background = new Background(Content.Load<Texture2D>("back"), Vector2.Zero, GraphicsDevice.Viewport.Width, GraphicsDevice.Viewport.Height);
@@ -71,17 +71,17 @@ namespace FeedMe
 
             currentMouse = Mouse.GetState();
 
-            Food curFodd = foodQueue.Peek();
+            
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
                 Exit();
             if (currentMouse.LeftButton == ButtonState.Released && oldMouse.LeftButton == ButtonState.Pressed)
             {
-                
+                Food curFodd = foods[0];
                 curFodd.Dropped();
                 foods.Add(curFodd);
                 
-                foodQueue.Enqueue(new Food(poffin, new Vector2(GraphicsDevice.Viewport.Width / 2 - poffin.Width / 2, 0)));
-                foodQueue.Dequeue();
+                foods.Add(new Food(poffin, new Vector2(GraphicsDevice.Viewport.Width / 2 - poffin.Width / 2, 0)));
+                foods.RemoveAt(0);
             }
           
 
@@ -109,7 +109,7 @@ namespace FeedMe
             //Backgroound drawning
             background.DrawMe(_spriteBatch);
 
-            foreach (Food item in foodQueue)
+            foreach (Food item in foods)
             {
                 item.DrawMe(_spriteBatch);
             }
