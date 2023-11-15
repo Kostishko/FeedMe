@@ -9,7 +9,10 @@ namespace FeedMe
     internal class Baddy : Object2D
     {
 
-        public int hungry;
+        private int hungry;
+        private float hungryTimer;
+        private const float HUNGRYTIME = 1f;
+
         public Mouth mouth;
 
 
@@ -17,19 +20,42 @@ namespace FeedMe
         {
 
             hungry = 50;
-            mouth = new Mouth(mouthTex, new Vector2(pos.X + tex.Width / 2 - mouthTex.Width / 4, pos.Y + 30),2);
+            mouth = new Mouth(mouthTex, new Vector2(pos.X + tex.Width / 2 - mouthTex.Width / 4, pos.Y + 30),2, this);
         }
 
         public void UpdateMe(List<Food> foods)
         {
             base.UpdateMe();
             mouth.UpdateMe(foods);
+
+
+            //hungryness
+            if(hungryTimer>0)
+            {
+                hungryTimer-=0.1f;
+            }
+            else
+            {
+                hungryTimer = HUNGRYTIME;
+                hungry--;
+            }
+            
         }
 
         public new void DrawMe(SpriteBatch sp)
         {
             base.DrawMe(sp);
             mouth.DrawMe(sp);
+            DebugManager.DebugString("Hungry: " + hungry, Vector2.Zero);
+        }
+
+        public int GetHungry()
+        {
+            return hungry;
+        }
+        public void AddHungry(int value)
+        {
+            hungry += value;
         }
 
 
@@ -45,13 +71,15 @@ namespace FeedMe
         //opening
         private float timer;
         private const float TIMER=2f;
+        private Baddy bad;
 
 
-        public Mouth (Texture2D tex, Vector2 pos, int frameAmount) : base (tex,pos)
+        public Mouth (Texture2D tex, Vector2 pos, int frameAmount, Baddy bad) : base (tex,pos)
         {
             sourceRec = new Rectangle[frameAmount];
             sourceRec[0] = new Rectangle(0, 0, tex.Width / frameAmount, tex.Height);
             collisionRec = sourceRec[0];
+            this.bad = bad;
 
             //oppening
             timer = 0;
@@ -69,6 +97,7 @@ namespace FeedMe
 
                     foods.RemoveAt(i);
                     timer = TIMER;
+                    bad.AddHungry(1);
                     break;
                     
                 }
