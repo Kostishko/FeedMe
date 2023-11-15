@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
+using System.Runtime.CompilerServices;
 
 namespace FeedMe
 {
@@ -11,18 +12,30 @@ namespace FeedMe
         private Vector2 velocity;
         private bool isDropped;
 
-        public Food (Texture2D tex, Vector2 pos) : base (tex, pos) 
+        private Color[] colours;
+
+        public Food(Texture2D tex, Vector2 pos) : base(tex, pos)
         {
 
             velocity = new Vector2(0, 5);
             isDropped = false;
+
+            colours = new Color[5];
+            colours[0] = Color.White;
+            colours[1] = Color.Red;
+            colours[2] = Color.Yellow;
+            colours[3] = Color.Green;
+            colours[4] = Color.Blue;
+
+            Color = colours[Game1.rng.Next(0, 5)];
+
 
         }
 
 
         public new void UpdateMe()
         {
-            if (isDropped) 
+            if (isDropped)
             {
                 Position += velocity;
                 collisionRec.Location += velocity.ToPoint();
@@ -35,6 +48,9 @@ namespace FeedMe
         {
             isDropped = true;
         }
+
+ 
+
 
 
     }

@@ -51,6 +51,11 @@ namespace FeedMe
             return Position;
         }
 
+        public Rectangle GetRectangle()
+        {
+            return collisionRec;
+        }
+
 
 
 

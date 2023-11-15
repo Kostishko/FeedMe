@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using SharpDX.Direct2D1.Effects;
+using System;
 using System.Collections.Generic;
 //using System.Windows.Forms;
 
@@ -16,15 +17,23 @@ namespace FeedMe
         private MouseState currentMouse;
         private MouseState oldMouse;
 
+        //Baddy
+        private Baddy baddy;
+
+
 
         //Food list
         private List<Food> foods;
+        private Food currentFood;
        // private Queue<Food> foodQueue;
         private Texture2D poffin;
 
 
         //background
         private Background background;
+
+        //Random
+        public static Random rng;
 
         //debug
 
@@ -48,14 +57,18 @@ namespace FeedMe
         {
             _spriteBatch = new SpriteBatch(GraphicsDevice);
 
+            rng = new Random();
+
             //food load
             foods = new List<Food>();
-            //foodQueue = new Queue<Food>();
-            poffin = Content.Load<Texture2D>("poffin");
-            //foodQueue.Enqueue(new Food(poffin, new Vector2(GraphicsDevice.Viewport.Width / 2 - poffin.Width / 2, 0)));
-            foods.Add(new Food(poffin, new Vector2(GraphicsDevice.Viewport.Width / 2 - poffin.Width/2, 0)));
+           poffin = Content.Load<Texture2D>("poffin");
+            currentFood = new Food(poffin, new Vector2(GraphicsDevice.Viewport.Width / 2 - poffin.Width / 2, 0));
 
-            //back load
+            //Baddy
+            var baddyTex = Content.Load<Texture2D>("143");
+            baddy = new Baddy(baddyTex, new Vector2(GraphicsDevice.Viewport.Width / 2 - baddyTex.Width / 2, GraphicsDevice.Viewport.Height - baddyTex.Height), Content.Load<Texture2D>("mouth"));
+
+             //back load
             background = new Background(Content.Load<Texture2D>("back"), Vector2.Zero, GraphicsDevice.Viewport.Width, GraphicsDevice.Viewport.Height);
 
 
@@ -76,21 +89,22 @@ namespace FeedMe
                 Exit();
             if (currentMouse.LeftButton == ButtonState.Released && oldMouse.LeftButton == ButtonState.Pressed)
             {
-                Food curFodd = foods[0];
-                curFodd.Dropped();
-                foods.Add(curFodd);
-                
-                foods.Add(new Food(poffin, new Vector2(GraphicsDevice.Viewport.Width / 2 - poffin.Width / 2, 0)));
-                foods.RemoveAt(0);
+                currentFood.Dropped();
+                foods.Add(currentFood);
+                currentFood = new Food(poffin, new Vector2(GraphicsDevice.Viewport.Width / 2 - poffin.Width / 2, 0));
             }
-          
 
-            foreach(Food item in foods)
+
+            if (foods.Count > 0)
             {
-                item.UpdateMe();
-              //  DebugManager.DebugString(foodQueue.Peek().GetPos().ToString(), Vector2.Zero);
+                for(int i = 0;i < foods.Count; i++) 
+                {
+                    foods[i].UpdateMe();
+                    //  DebugManager.DebugString(foodQueue.Peek().GetPos().ToString(), Vector2.Zero);
+                }
             }
 
+            baddy.UpdateMe(foods);
 
             
 
@@ -109,14 +123,16 @@ namespace FeedMe
             //Backgroound drawning
             background.DrawMe(_spriteBatch);
 
-            foreach (Food item in foods)
+            baddy.DrawMe(_spriteBatch);
+            currentFood.DrawMe(_spriteBatch);
+            if (foods.Count > 0)
             {
-                item.DrawMe(_spriteBatch);
+                for (int i =0; i<foods.Count;i++)
+                {
+                    foods[i].DrawMe(_spriteBatch);
+                }
             }
-            foreach (Food item in foods)
-            {
-                item.DrawMe(_spriteBatch);
-            }
+            
 
             _spriteBatch.End();
 
