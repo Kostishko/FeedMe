@@ -11,7 +11,7 @@ namespace FeedMe
 
         private int hungry;
         private float hungryTimer;
-        private const float HUNGRYTIME = 1f;
+        private const float HUNGRYTIME = 2f;
 
         public Mouth mouth;
 

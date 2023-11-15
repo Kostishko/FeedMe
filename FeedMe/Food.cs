@@ -21,7 +21,7 @@ namespace FeedMe
             isDropped = false;
 
             colours = new Color[5];
-            colours[0] = Color.White;
+            colours[0] = Color.Purple;
             colours[1] = Color.Red;
             colours[2] = Color.Yellow;
             colours[3] = Color.Green;

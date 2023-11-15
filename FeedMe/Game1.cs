@@ -28,6 +28,9 @@ namespace FeedMe
        // private Queue<Food> foodQueue;
         private Texture2D poffin;
 
+        //UI
+        private HungryUI hungryUI;
+
 
         //background
         private Background background;
@@ -67,8 +70,10 @@ namespace FeedMe
             //Baddy
             var baddyTex = Content.Load<Texture2D>("143");
             baddy = new Baddy(baddyTex, new Vector2(GraphicsDevice.Viewport.Width / 2 - baddyTex.Width / 2, GraphicsDevice.Viewport.Height - baddyTex.Height), Content.Load<Texture2D>("mouth"));
+            //Baddy UI
+            hungryUI = new HungryUI(Content.Load<Texture2D>("face"), new Vector2(GraphicsDevice.Viewport.Width * 8 / 10, GraphicsDevice.Viewport.Height * 4 / 6), baddy);
 
-             //back load
+            //back load
             background = new Background(Content.Load<Texture2D>("back"), Vector2.Zero, GraphicsDevice.Viewport.Width, GraphicsDevice.Viewport.Height);
 
 
@@ -105,6 +110,7 @@ namespace FeedMe
             }
 
             baddy.UpdateMe(foods);
+            hungryUI.UpdateMe();
 
             
 
@@ -132,6 +138,7 @@ namespace FeedMe
                     foods[i].DrawMe(_spriteBatch);
                 }
             }
+            hungryUI.DrawMe(_spriteBatch);
             
 
             _spriteBatch.End();
