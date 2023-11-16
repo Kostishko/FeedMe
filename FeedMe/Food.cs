@@ -17,6 +17,7 @@ namespace FeedMe
             velocity = new Vector2(0, 5);
             isDropped = false;
 
+            //I was too lasy to make real random colours
             colours = new Color[5];
             colours[0] = Color.Purple;
             colours[1] = Color.Red;

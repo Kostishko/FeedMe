@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using SharpDX.Direct2D1.Effects;
+using SharpDX.XInput;
 using System;
 using System.Collections.Generic;
 //using System.Windows.Forms;
@@ -16,6 +17,8 @@ namespace FeedMe
         //Control
         private MouseState currentMouse;
         private MouseState oldMouse;
+        private KeyboardState currentKeybouard;
+        private KeyboardState oldKeyboard;
 
         //Baddy
         private Baddy baddy;
@@ -33,6 +36,8 @@ namespace FeedMe
 
         //UI
         private HungryUI hungryUI;
+        static public SpriteFont uiFont;
+        private String loseMessage;
 
 
         //background
@@ -44,7 +49,7 @@ namespace FeedMe
         public static Random rng;
 
         //statistic
-        private struct Statistic
+        public struct Statistic
         {
             public float timer;
             public int droppedPoff;
@@ -56,8 +61,19 @@ namespace FeedMe
             public float feedRate;
         }
 
-        private Statistic statistic;
+        static public Statistic statistic;
+        string statString;
 
+        // Game stats
+        private enum GameStates
+        {
+            Start,
+            Lose,
+            Win,
+            Game,
+            Statistic
+        }
+        private GameStates state;
 
         public Game1()
         {
@@ -80,95 +96,54 @@ namespace FeedMe
 
             rng = new Random();
 
-            //food load
-            foods = new List<Food>();
-           poffin = Content.Load<Texture2D>("poffin");
-            currentFood = new Food(poffin, new Vector2(GraphicsDevice.Viewport.Width / 2 - poffin.Width / 2, 0));
+            uiFont = Content.Load<SpriteFont>("mainFont");
 
-            //Baddy
-            var baddyTex = Content.Load<Texture2D>("143");
-            baddy = new Baddy(baddyTex, new Vector2(GraphicsDevice.Viewport.Width / 2 - baddyTex.Width / 2, GraphicsDevice.Viewport.Height - baddyTex.Height), Content.Load<Texture2D>("mouth"));
-            //Baddy UI
-            hungryUI = new HungryUI(Content.Load<Texture2D>("face"), new Vector2(GraphicsDevice.Viewport.Width * 8 / 10, GraphicsDevice.Viewport.Height * 4 / 6), baddy);
-
-            //back load
-            background = new Background(Content.Load<Texture2D>("back"), Vector2.Zero, GraphicsDevice.Viewport.Width, GraphicsDevice.Viewport.Height);
-
-            //seagulls
-            seagulls = new List<SeaGull>();
-            for (int i=0; i<7; i++)
-            {
-                seagulls.Add(new SeaGull(Content.Load<Texture2D>("gull"), Vector2.Zero, GraphicsDevice.Viewport.Width, GraphicsDevice.Viewport.Height));
-            }
-
-            //Statistics
-            statistic = new Statistic();
+            StartStateInitialise();
+            state = GameStates.Start;
 
             //debug initialise
             DebugManager.debugFont = Content.Load<SpriteFont>("debugFont");
             DebugManager.debugRecTex = Content.Load<Texture2D>("DebugBounds");
             DebugManager.sp = _spriteBatch;
-            DebugManager.ShowDebug();
+            DebugManager.HideDebug();
+
         }
 
         protected override void Update(GameTime gameTime)
         {
-
+            //currentState of buttons and keys
             currentMouse = Mouse.GetState();
-
+            currentKeybouard =  Keyboard.GetState();
             
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
                 Exit();
-
-            //Dropping foods
-            if (currentMouse.LeftButton == ButtonState.Released && oldMouse.LeftButton == ButtonState.Pressed)
+            switch(state)
             {
-                currentFood.Dropped();
-                foods.Add(currentFood);
-                currentFood = new Food(poffin, new Vector2(GraphicsDevice.Viewport.Width / 2 - poffin.Width / 2, 0));
+                case GameStates.Start:
+                    StartStateUpdate();
+                    break;
+                case GameStates.Game:
+                    GameStateUpdate(gameTime);
+                    break;
+                case GameStates.Lose:
+                    LoseStateUpdate();
+                    break;
+                case GameStates.Win:
+                    WinStateUpdate();
+                    break;
+                case GameStates.Statistic:
+                    StatisticStateUpdate();
+                    break;
+
             }
 
-            // foods updating
-            if (foods.Count > 0)
-            {
-                for(int i = 0;i < foods.Count; i++) 
-                {
-                    foods[i].UpdateMe();
-                    //  DebugManager.DebugString(foodQueue.Peek().GetPos().ToString(), Vector2.Zero);
-                }
-            }
-
-
-            //updating baddy
-            baddy.UpdateMe(foods);
-
-            //Seaguls updating
-            for(int i = 0;i< seagulls.Count; i++) 
-            {
-                seagulls[i].UpdateMe();
             
-            }
-
-            //seaguls are catching food
-            for(int i =0; i<seagulls.Count; i++) 
-            {
-                for(int j =0; j<foods.Count; j++) 
-                {
-                    if (seagulls[i].catchFood(foods[j]))
-                    {
-                        foods.RemoveAt(j); 
-                        break;
-                    }
-                }
-            
-            }
-
-            //Pictures of Face updating
-            hungryUI.UpdateMe();
 
             
 
 
+            //keys state frame ago
+            oldKeyboard = currentKeybouard;
             oldMouse = currentMouse;
             base.Update(gameTime);
         }
@@ -183,6 +158,157 @@ namespace FeedMe
             //Backgroound drawning
             background.DrawMe(_spriteBatch);
 
+            //Drawning
+            switch (state)
+            {
+                case GameStates.Start:
+                    StartStateDraw();
+                    break;
+                case GameStates.Game:
+                    GameStateDrawMe();
+                    break;
+                case GameStates.Lose:
+                    LoseStateDraw();
+                    break;
+                case GameStates.Win:
+                    WinStateDraw();
+                    break;
+                case GameStates.Statistic:
+                    StatisticStateDraw();
+                    break;
+            }
+
+
+            DebugManager.DebugString("statistic timer: " + statistic.timer + "\nGameTime Second: " + gameTime.ElapsedGameTime.TotalSeconds, Vector2.Zero);
+                    _spriteBatch.End();
+
+            // TODO: Add your drawing code here
+            
+
+            base.Draw(gameTime);
+        }
+
+        
+        public void StartStateInitialise()
+        {
+           
+            //food load
+            foods = new List<Food>();
+            poffin = Content.Load<Texture2D>("poffin");
+            currentFood = new Food(poffin, new Vector2(GraphicsDevice.Viewport.Width / 2 - poffin.Width / 2, 0));
+
+            //Baddy
+            var baddyTex = Content.Load<Texture2D>("143");
+            baddy = new Baddy(baddyTex, new Vector2(GraphicsDevice.Viewport.Width / 2 - baddyTex.Width / 2, GraphicsDevice.Viewport.Height - baddyTex.Height), Content.Load<Texture2D>("mouth"));
+            //Baddy UI
+            hungryUI = new HungryUI(Content.Load<Texture2D>("face"), new Vector2(GraphicsDevice.Viewport.Width * 8 / 10, GraphicsDevice.Viewport.Height * 4 / 6), baddy);
+
+            //back load
+            background = new Background(Content.Load<Texture2D>("back"), Vector2.Zero, GraphicsDevice.Viewport.Width, GraphicsDevice.Viewport.Height);
+
+            //seagulls
+            seagulls = new List<SeaGull>();
+            for (int i = 0; i < 7; i++)
+            {
+                seagulls.Add(new SeaGull(Content.Load<Texture2D>("gull"), Vector2.Zero, GraphicsDevice.Viewport.Width, GraphicsDevice.Viewport.Height));
+            }
+
+            //Statistics
+            statistic = new Statistic();
+
+        }
+
+        public void StartStateUpdate()
+        {
+            if (currentKeybouard.IsKeyUp(Keys.Space) && oldKeyboard.IsKeyDown(Keys.Space))
+            {
+                StartStateInitialise();
+                state = GameStates.Game;
+            }
+        }
+        public void StartStateDraw()
+        {
+            _spriteBatch.DrawString(uiFont, "Press SPACE to start", new Vector2(GraphicsDevice.Viewport.Width/2 - 150, 
+                GraphicsDevice.Viewport.Height/2 - 11), Color.Yellow);
+        }
+
+        public void GameStateUpdate(GameTime gameTime)
+        {
+            //Dropping foods
+            if (currentMouse.LeftButton == ButtonState.Released && oldMouse.LeftButton == ButtonState.Pressed)
+            {
+                currentFood.Dropped();
+                foods.Add(currentFood);
+                currentFood = new Food(poffin, new Vector2(GraphicsDevice.Viewport.Width / 2 - poffin.Width / 2, 0));
+                statistic.droppedPoff++;
+            }
+
+            // foods updating
+            if (foods.Count > 0)
+            {
+                for (int i = 0; i < foods.Count; i++)
+                {
+                    foods[i].UpdateMe();
+                    //  DebugManager.DebugString(foodQueue.Peek().GetPos().ToString(), Vector2.Zero);
+                }
+            }
+
+
+            //updating baddy
+            baddy.UpdateMe(foods);
+
+            if (baddy.GetHungry()>=100)
+            {
+                background.SetTexture(Content.Load<Texture2D>("win"));
+                state = GameStates.Win;
+            }
+
+            if (baddy.GetHungry()<=0)
+            {
+                background.SetTexture(Content.Load<Texture2D>("lose"));
+                loseMessage = "Your pokemon\nare starving!\nPress SPACE to start";
+                state = GameStates.Lose;
+            }
+
+            //Seaguls updating
+            for (int i = 0; i < seagulls.Count; i++)
+            {
+                seagulls[i].UpdateMe();
+
+            }
+
+            //seaguls are catching food
+            for (int i = 0; i < seagulls.Count; i++)
+            {
+                for (int j = 0; j < foods.Count; j++)
+                {
+                    if (seagulls[i].catchFood(foods[j]))
+                    {
+                        foods.RemoveAt(j);
+                        if (seagulls[i].FoodCaughtCounter>6)
+                        {
+                            background.SetTexture(Content.Load<Texture2D>("lose"));
+                            loseMessage = "Some seagull have\nate too much food!\nPress SPACE to start";
+                            state = GameStates.Lose;
+                        }
+                        break;
+                    }
+                }
+
+            }
+
+            //Pictures of Face updating
+            hungryUI.UpdateMe();
+
+            //Statistic
+            statistic.timer += (float)gameTime.ElapsedGameTime.TotalSeconds;
+            
+
+
+        }
+
+        public void GameStateDrawMe()
+        {
             //baddy drawing
             baddy.DrawMe(_spriteBatch);
 
@@ -191,7 +317,7 @@ namespace FeedMe
             //dropped food
             if (foods.Count > 0)
             {
-                for (int i =0; i<foods.Count;i++)
+                for (int i = 0; i < foods.Count; i++)
                 {
                     foods[i].DrawMe(_spriteBatch);
                 }
@@ -204,16 +330,70 @@ namespace FeedMe
 
             //ui hungry
             hungryUI.DrawMe(_spriteBatch);
+        }
+
+        public void LoseStateUpdate()
+        {
+            if (currentKeybouard.IsKeyUp(Keys.Space)&&oldKeyboard.IsKeyDown(Keys.Space))
+            {
+                StartStateInitialise();
+                state = GameStates.Start;
+            }
+        }
+        public void LoseStateDraw()
+        {
+            _spriteBatch.DrawString(uiFont, loseMessage, new Vector2(GraphicsDevice.Viewport.Width / 3+50, GraphicsDevice.Viewport.Height / 2), Color.Chocolate);
+        }
+
+        public void WinStateUpdate()
+        {
+            if (currentKeybouard.IsKeyUp(Keys.Space)&&oldKeyboard.IsKeyDown(Keys.Space))
+            {
+                statString = StatisticCalculation();
+                background.SetTexture(Content.Load<Texture2D>("back"));
+                state = GameStates.Statistic;
+            }
+        }
+        public void WinStateDraw()
+        {
+            _spriteBatch.DrawString(uiFont, "YOU WIN!\nPress SPACE to watch\nyour statistic.", new Vector2(GraphicsDevice.Viewport.Width/2-150, GraphicsDevice.Viewport.Height*2/3), Color.Chocolate);
             
+        }
 
-            _spriteBatch.End();
+        public String StatisticCalculation()
+        {
+            for (int i = 0;i<seagulls.Count;i++) 
+            {
+                statistic.gullsAte += seagulls[i].FoodCaughtCounter; //calculate how many ate all gulls
+                if (seagulls[i].FoodCaughtCounter > 0) //calculate how many gulls ate our food
+                    statistic.gullsFeeded++;
+                if (seagulls[i].FoodCaughtCounter > statistic.mostFeededGull) //seagull that ate most part of food
+                    statistic.mostFeededGull = seagulls[i].FoodCaughtCounter;
+            }
+            statistic.dropRate = statistic.timer / statistic.droppedPoff;
+            statistic.feedRate = statistic.timer / statistic.baddyAte;
 
-            // TODO: Add your drawing code here
+            return "Your game took " + Math.Round(statistic.timer,2) + " seconds.\nYou dropped " + statistic.droppedPoff + " poffins.\n" + statistic.baddyAte + " of them eaten by snorlax\n"
+                + "and " + statistic.gullsAte + " of them by seagulls.\nYou fed " + statistic.gullsFeeded + " seagulls\nand the largest seagull ate " + statistic.mostFeededGull +
+                "poffins\nYour drope rate was " + Math.Round(statistic.dropRate,2) + " poffin/sec\nand your feed rate was: " + Math.Round(statistic.feedRate,2) + " poffins/sec\n\n Press SPACE to start again";
+        }
 
-            base.Draw(gameTime);
+        public void StatisticStateUpdate()
+        {
+            if (currentKeybouard.IsKeyUp(Keys.Space) && oldKeyboard.IsKeyDown(Keys.Space))
+            {
+                StartStateInitialise();
+                state = GameStates.Start;               
+            }
+        }
+        public void StatisticStateDraw()
+        {
+            _spriteBatch.DrawString(uiFont, statString, Vector2.One, Color.Black);
         }
 
 
-        
+
+
+
     }
 }

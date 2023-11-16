@@ -34,7 +34,9 @@ namespace FeedMe
 
         }
 
-
+        /// <summary>
+        /// mainRec and collisionRec move to Position
+        /// </summary>
         public void UpdateMe()
         {
             mainRec.Location = Position.ToPoint();
@@ -45,6 +47,7 @@ namespace FeedMe
         {
             sp.Draw(Texture, mainRec,Color);
         }
+
 
         public Vector2 GetPos()
         {

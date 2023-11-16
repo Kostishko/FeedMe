@@ -14,6 +14,11 @@ namespace FeedMe
 
         static private bool isActive = false;
 
+        /// <summary>
+        /// It works ONLY in Draw method
+        /// </summary>
+        /// <param name="message">Your string message</param>
+        /// <param name="pos">Where to draw</param>
         public static void DebugString(string message, Vector2 pos)
         {
             if (isActive)
@@ -24,6 +29,10 @@ namespace FeedMe
 
         }
 
+        /// <summary>
+        /// It works ONLY in Draw method
+        /// </summary>
+        /// <param name="rec">place your rectangle here</param>
         public static void DebugRectangle(Rectangle rec)
         {
             if (isActive)
